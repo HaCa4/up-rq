@@ -1,34 +1,26 @@
-import { useEffect } from "react";
+import { useContext } from "react";
 import { HiChevronDown } from "react-icons/hi";
-
-/* REDUX */
-import { useDispatch, useSelector } from "react-redux";
-import { bindActionCreators } from "redux";
-import { actionCreators } from "../../../redux";
-import { InitialState } from "../../../utils/types/inRedux";
+import { useQuery } from "react-query";
+import axios from "../../../axios";
+import { FilterContext } from "../../../context/QuerySearchContext";
+import { CategoryType } from "../../../pages/Create";
 
 /* CSS-TAILWIND CLASSNAMES */
 import { home } from "../../../utils/styling/styleNames";
 
 const CategorySelect = () => {
-  const dispatch = useDispatch();
-  const { selectCategory, getCategoryList } = bindActionCreators(actionCreators, dispatch);
-  const categoryList = useSelector((state: InitialState) => state.reducer.categoryList);
-
-  useEffect(() => {
-    getCategoryList();
-  }, []);
-
+  const { setSelectedCategory } = useContext(FilterContext);
+  const { data } = useQuery("categories", () => axios.get("/categories").then((res) => res.data));
   return (
     <div className={home.categorySelect.div}>
       <select
         className={home.categorySelect.select}
-        onChange={(e) => selectCategory(e.target.value)}
+        onChange={(e) => setSelectedCategory(e.target.value)}
       >
         <option defaultValue="Categories"> Categories</option>
-        {categoryList?.map((category) => (
-          <option key={category.id} value={category.name}>
-            {category.name}
+        {data?.map((category: CategoryType) => (
+          <option value={category.name} key={category.id}>
+            {category.name}{" "}
           </option>
         ))}
       </select>

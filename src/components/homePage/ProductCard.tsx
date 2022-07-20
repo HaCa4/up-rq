@@ -1,31 +1,25 @@
 import { useNavigate } from "react-router-dom";
 import { AiFillDelete } from "react-icons/ai";
 
-/* REDUX */
-import { useDispatch } from "react-redux";
-import { bindActionCreators } from "redux";
-import { actionCreators } from "../../redux";
-
 /* CSS-TAILWIND CLASSNAMES */
 import { home } from "../../utils/styling/styleNames";
+import { ComponentProps } from "../../utils/types/types";
+import axios from "../../axios";
 
 /* TYPES */
-import { ProductCardProps } from "../../utils/types/inOthers";
 
-const ProductCard = ({ product }: ProductCardProps) => {
+const ProductCard = ({ product }: ComponentProps) => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const { deleteProduct } = bindActionCreators(actionCreators, dispatch);
 
   return (
     <div className={home.productCard.containerDiv}>
       <AiFillDelete
-        onClick={() => deleteProduct(product.id)}
         className={home.productCard.deleteIcon}
+        onClick={() => axios.delete(`products/${product.id}`)}
       />
       <div className={home.productCard.upperDiv}>
         <img
-          alt={product.name}
+          alt="/iphone.jpg"
           src={product.avatar}
           className={home.productCard.image}
           onClick={() => navigate(`/product/${product.id}`)}

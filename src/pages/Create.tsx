@@ -1,33 +1,36 @@
-import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-/* REDUX */
-import { bindActionCreators } from "redux";
-import { useDispatch, useSelector } from "react-redux";
-import { actionCreators } from "../redux";
-import { InitialState } from "../utils/types/inRedux";
-
 /* FORM HANDLING & VALIDATION */
-import { useFormik } from "formik";
+import { FormikValues, useFormik } from "formik";
 import * as Yup from "yup";
 
 /* CSS-TAILWIND CLASSNAMES */
 import { create } from "../utils/styling/styleNames";
 
 /* CONSTANTS AND TYPES */
-import { initialProductValues } from "../utils/constants/constants";
 import { AiOutlineRollback } from "react-icons/ai";
+import axios from "../axios";
+import { useMutation, useQuery } from "react-query";
 
+export type CategoryType = {
+  id: string;
+  name: string;
+};
 const Create = () => {
   const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const categoryList = useSelector((state: InitialState) => state.reducer.categoryList);
-
-  const { addNewProduct } = bindActionCreators(actionCreators, dispatch);
-  const { getCategoryList } = bindActionCreators(actionCreators, dispatch);
-
-  const addNewProductFormik = useFormik({
-    initialValues: initialProductValues,
+  const mutation = useMutation((values) => {
+    return axios.post("/products", values);
+  });
+  const { data } = useQuery("categories", () => axios.get("/categories").then((res) => res.data));
+  const addNewProductFormik = useFormik<FormikValues>({
+    initialValues: {
+      name: "",
+      description: "",
+      avatar: "",
+      developerEmail: "",
+      category: "",
+      price: "",
+    },
     validationSchema: Yup.object({
       name: Yup.string().required("Product name is required"),
       description: Yup.string().required("Description is required"),
@@ -38,15 +41,11 @@ const Create = () => {
         .required("Developer email is required")
         .email("Invalid email address"),
     }),
-    onSubmit: (values) => {
-      addNewProduct(values, navigate);
+    onSubmit: async (values: any) => {
+      mutation.mutate(values);
+      navigate("/");
     },
   });
-
-  useEffect(() => {
-    getCategoryList();
-  }, []);
-
   return (
     <div className="pageDiv">
       <h3 className={create.formTitle}>Create New Product</h3>
@@ -68,7 +67,7 @@ const Create = () => {
               alignSelf: "flex-start",
             }}
           >
-            {addNewProductFormik.errors.name}
+            <>{addNewProductFormik.errors.name}</>
           </h6>
         )}
         <textarea
@@ -89,7 +88,7 @@ const Create = () => {
               alignSelf: "flex-start",
             }}
           >
-            {addNewProductFormik.errors.description}
+            <>{addNewProductFormik.errors.description}</>
           </h6>
         )}
         <input
@@ -109,7 +108,7 @@ const Create = () => {
               alignSelf: "flex-start",
             }}
           >
-            {addNewProductFormik.errors.avatar}
+            <>{addNewProductFormik.errors.avatar}</>
           </h6>
         )}
         <select
@@ -120,9 +119,9 @@ const Create = () => {
           onBlur={addNewProductFormik.handleBlur}
         >
           <option value="None">Select a category</option>
-          {categoryList?.map((category) => (
-            <option className={create.option} key={category.id} value={category.name}>
-              {category.name}
+          {data.map((category: CategoryType) => (
+            <option value={category.name} key={category.id}>
+              {category.name}{" "}
             </option>
           ))}
         </select>
@@ -135,7 +134,7 @@ const Create = () => {
               alignSelf: "flex-start",
             }}
           >
-            {addNewProductFormik.errors.category}
+            <>{addNewProductFormik.errors.category}</>
           </h6>
         ) : null}
         <input
@@ -155,7 +154,8 @@ const Create = () => {
               alignSelf: "flex-start",
             }}
           >
-            {addNewProductFormik.errors.price}
+            {" "}
+            <>{addNewProductFormik.errors.price}</>
           </h6>
         )}
         <input
@@ -175,7 +175,7 @@ const Create = () => {
               alignSelf: "flex-start",
             }}
           >
-            {addNewProductFormik.errors.developerEmail}
+            <>{addNewProductFormik.errors.developerEmail}</>
           </h6>
         )}
         <button
@@ -185,7 +185,10 @@ const Create = () => {
         >
           SUBMIT
         </button>
+        {mutation.status === "loading" && <>Loading</>}
+        {mutation.status === "error" && <>Error</>}
       </form>
+
       <AiOutlineRollback onClick={() => navigate("/")} className="backIcon" />
     </div>
   );

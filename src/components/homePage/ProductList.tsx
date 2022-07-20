@@ -1,36 +1,35 @@
-import { useEffect } from "react";
-
-/* REDUX */
-import { useDispatch, useSelector } from "react-redux";
-import { bindActionCreators } from "redux";
-import { actionCreators } from "../../redux";
-
+import axios from "../../axios";
 /* COMPONENTS */
 import ProductCard from "./ProductCard";
 
 /* CSS-TAILWIND CLASSNAMES */
 import { home } from "../../utils/styling/styleNames";
-
-/* TYPES */
-import { InitialState } from "../../utils/types/inRedux";
+import { useQuery } from "react-query";
+import { Product } from "../../utils/types/types";
+import { useContext } from "react";
+import { FilterContext } from "../../context/QuerySearchContext";
+import qs from "qs";
 
 const ProductList = () => {
-  const dispatch = useDispatch();
-  const { getProductList } = bindActionCreators(actionCreators, dispatch);
-  const productList = useSelector((state: InitialState) => state.reducer.productList);
-  const searchValue = useSelector((state: InitialState) => state.reducer.searchValue);
-  const selectedCategory = useSelector((state: InitialState) => state.reducer.selectedCategory);
+  const { searchValue, selectedCategory } = useContext(FilterContext);
+  const query = qs.stringify({
+    name: searchValue === "" ? undefined : searchValue,
+    category: selectedCategory === "Categories" ? undefined : selectedCategory,
+  });
 
-  useEffect(() => {
-    getProductList();
-  }, [searchValue, selectedCategory]);
-
+  const { data, status } = useQuery(
+    ["products", query],
+    () => axios.get(`/products?${query}`).then((res) => res.data),
+    { staleTime: 30000, refetchIntervalInBackground: true }
+  );
   return (
     <div className={home.productList}>
-      {productList?.length === 0 ? (
-        <div>No products found..</div>
+      {status === "error" && <p>Error</p>}
+      {status === "loading" && <p>loading</p>}
+      {status === "success" && data.length > 0 ? (
+        data.map((product: Product) => <ProductCard product={product} key={product.id} />)
       ) : (
-        productList?.map((product) => <ProductCard product={product} key={product.id} />)
+        <p>No Products Found</p>
       )}
     </div>
   );

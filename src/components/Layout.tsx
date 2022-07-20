@@ -1,11 +1,7 @@
-import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
 import { Outlet } from "react-router-dom";
-import { InitialState } from "../utils/types/inRedux";
 import Navbar from "./Navbar";
 
 const Layout = () => {
-  let isLoading = useSelector((state: InitialState) => state.reducer.isLoading);
   return (
     <div
       style={{
@@ -21,7 +17,6 @@ const Layout = () => {
     >
       <Navbar />
       <Outlet />
-      {isLoading ? <div className="fixed z-10 right-2 top-2">Loading</div> : null}
     </div>
   );
 };
